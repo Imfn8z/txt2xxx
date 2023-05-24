@@ -1,14 +1,16 @@
 import tkinter as tk
-from tkinter import filedialog
+from tkinter import messagebox
 from Crypto.Cipher import AES
-from Crypto.Util.Padding import pad, unpad
+from Crypto.Protocol.KDF import PBKDF2
+from Crypto.Random import get_random_bytes
 import base64
 import pyperclip
 
 class App:
     def __init__(self, master):
+        print("Initializing App...")
         self.master = master
-        master.title("AES加密解密程序")
+        master.title("PRE-AES加密解密程序")
 
         self.label = tk.Label(master, text="请输入要加密/解密的文本和密钥：")
         self.label.grid(row=0, column=0, columnspan=2)
@@ -34,28 +36,49 @@ class App:
         self.paste_button = tk.Button(master, text="粘贴", command=self.paste_text)
         self.paste_button.grid(row=4, column=1)
 
-    def pad_key(self, key):
-        return (key * 4)[:16]
-
     def encrypt(self):
-        text = self.text.get("1.0", "end-1c")
-        key = self.pad_key(self.key_entry.get())
-        cipher = AES.new(key.encode(), AES.MODE_CBC)
-        ct_bytes = cipher.encrypt(pad(text.encode(), AES.block_size))
-        iv = base64.b64encode(cipher.iv).decode('utf-8')
-        ct = base64.b64encode(ct_bytes).decode('utf-8')
-        self.text.delete("1.0", "end")
-        self.text.insert("1.0", iv + ct)
+        try:
+            print("Starting encryption...")
+            text = self.text.get("1.0", "end-1c")
+            password = self.key_entry.get()
+            print(f"Text to encrypt: {text}")
+            print(f"Password: {password}")
+            salt = get_random_bytes(8)
+            key = PBKDF2(password, salt, 16)
+            cipher = AES.new(key, AES.MODE_GCM)
+            ct_bytes, tag = cipher.encrypt_and_digest(text.encode())
+            iv = base64.b64encode(cipher.nonce).decode('utf-8')
+            ct = base64.b64encode(ct_bytes).decode('utf-8')
+            encoded_tag = base64.b64encode(tag).decode('utf-8')
+            encoded_salt = base64.b64encode(salt).decode('utf-8')
+            self.text.delete("1.0", "end")
+            self.text.insert("1.0", encoded_salt + ',' + iv + ',' + ct + ',' + encoded_tag)
+            print("Encryption finished.")
+        except Exception as e:
+            print(f"Encryption error: {e}")
+            messagebox.showerror("错误", str(e))
 
     def decrypt(self):
-        ciphertext = self.text.get("1.0", "end-1c")
-        key = self.pad_key(self.key_entry.get())
-        iv = base64.b64decode(ciphertext[:24])
-        ct = base64.b64decode(ciphertext[24:])
-        cipher = AES.new(key.encode(), AES.MODE_CBC, iv)
-        pt = unpad(cipher.decrypt(ct), AES.block_size)
-        self.text.delete("1.0", "end")
-        self.text.insert("1.0", pt.decode('utf-8'))
+        try:
+            print("Starting decryption...")
+            ciphertext = self.text.get("1.0", "end-1c").split(',')
+            password = self.key_entry.get()
+            print(f"Ciphertext: {ciphertext}")
+            print(f"Password: {password}")
+            salt = base64.b64decode(ciphertext[0])
+            iv = base64.b64decode(ciphertext[1])
+            ct = base64.b64decode(ciphertext[2])
+            tag = base64.b64decode(ciphertext[3])
+            key = PBKDF2(password, salt, 16)
+            cipher = AES.new(key, AES.MODE_GCM, nonce=iv)
+            data = cipher.decrypt_and_verify(ct, tag) # Here we replaced 'update' with 'decrypt_and_verify'
+            self.text.delete("1.0", "end")
+            self.text.insert("1.0", data.decode('utf-8'))
+            print("Decryption successful!")
+        except Exception as e:
+            print(f"Decryption error: {e}")
+            messagebox.showerror("错误", str(e))
+
 
     def copy_text(self):
         selected_text = self.text.get(tk.SEL_FIRST, tk.SEL_LAST)

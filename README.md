@@ -1,4 +1,4 @@
-# PRE-AES加密解密程序
+# AES加密解密程序
 
 这是一个使用Python和tkinter构建的GUI应用，用户可以使用这个程序进行AES加密和解密操作。
 
@@ -13,7 +13,7 @@ pip install pyperclip pycryptodome
 然后，你可以克隆这个仓库并运行主程序：
 
 ```
-git clone https://github.com/your-username/your-repository.git
+git clone https://github.com/Imfn8z/txt2xxx.git
 cd your-repository
 python main.py
 ```
@@ -32,7 +32,7 @@ python main.py
 
 ## 法律责任
 
-使用本程序时，用户应遵守中国的相关法律和法规。不得使用本程序进行任何违法活动，包括但不限于未经授权的数据访问、数据窃取、恶意篡改数据等。一切由此引发的法律责任由用户自行承担。
+使用本程序时，用户应遵守当地的相关法律和法规。不得使用本程序进行任何违法活动，包括但不限于未经授权的数据访问、数据窃取、恶意篡改数据等。一切由此引发的法律责任由用户自行承担。
 
 ## 开源许可
 
