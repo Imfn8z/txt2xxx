@@ -6,9 +6,14 @@ from Crypto.Random import get_random_bytes
 import base64
 import pyperclip
 
+DEBUG = False
+
 class App:
     def __init__(self, master):
-        print("Initializing App...")
+
+        if DEBUG:
+            print("Initializing App...")
+
         self.master = master
         master.title("PRE-AES加密解密程序")
 
@@ -38,11 +43,17 @@ class App:
 
     def encrypt(self):
         try:
-            print("Starting encryption...")
+
+            if DEBUG:
+                print("Starting encryption...")
+
             text = self.text.get("1.0", "end-1c")
             password = self.key_entry.get()
-            print(f"Text to encrypt: {text}")
-            print(f"Password: {password}")
+
+            if DEBUG:
+                print(f"Text to encrypt: {text}")
+                print(f"Password: {password}")
+
             salt = get_random_bytes(8)
             key = PBKDF2(password, salt, 16)
             cipher = AES.new(key, AES.MODE_GCM)
@@ -53,18 +64,29 @@ class App:
             encoded_salt = base64.b64encode(salt).decode('utf-8')
             self.text.delete("1.0", "end")
             self.text.insert("1.0", encoded_salt + ',' + iv + ',' + ct + ',' + encoded_tag)
-            print("Encryption finished.")
+
+            if DEBUG:
+                print("Encryption finished.")
+
         except Exception as e:
-            print(f"Encryption error: {e}")
+
+            if DEBUG:
+                print(f"Encryption error: {e}")
+
             messagebox.showerror("错误", str(e))
 
     def decrypt(self):
         try:
-            print("Starting decryption...")
+            if DEBUG:
+                print("Starting decryption...")
+
             ciphertext = self.text.get("1.0", "end-1c").split(',')
             password = self.key_entry.get()
-            print(f"Ciphertext: {ciphertext}")
-            print(f"Password: {password}")
+
+            if DEBUG:
+                print(f"Ciphertext: {ciphertext}")
+                print(f"Password: {password}")
+
             salt = base64.b64decode(ciphertext[0])
             iv = base64.b64decode(ciphertext[1])
             ct = base64.b64decode(ciphertext[2])
@@ -74,9 +96,15 @@ class App:
             data = cipher.decrypt_and_verify(ct, tag) # Here we replaced 'update' with 'decrypt_and_verify'
             self.text.delete("1.0", "end")
             self.text.insert("1.0", data.decode('utf-8'))
-            print("Decryption successful!")
+            
+            if DEBUG:
+                print("Decryption successful!")
+
         except Exception as e:
-            print(f"Decryption error: {e}")
+            
+            if DEBUG:
+                print(f"Decryption error: {e}")
+
             messagebox.showerror("错误", str(e))
 
 
